@@ -1,0 +1,157 @@
+version: "3.8"
+
+# ============================================================
+#  HBase Cluster with Sharding & Replication - School Project
+#  Architecture:
+#    - 1 HBase Master
+#    - 3 RegionServers  (= sharding: data distributed across them)
+#    - ZooKeeper        (= coordination & leader election)
+#    - REST API (Stargate) exposed on port 8080
+#
+#  Replication is configured per-table (REPLICATION_SCOPE=1)
+#  in the setup script, using HBase built-in replication.
+# ============================================================
+
+services:
+  # ── ZooKeeper ───────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - hbase-net
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── HBase Master ────────────────────────────────────────────
+  hbase-master:
+    image: harisekhon/hbase:latest
+    container_name: hbase-master
+    hostname: hbase-master
+    environment:
+      - HBASE_MANAGES_ZK=false
+      - HBASE_ZOOKEEPER_QUORUM=zookeeper
+      - HBASE_ZOOKEEPER_PROPERTY_CLIENT_PORT=2181
+      # Enable replication
+      - HBASE_REPLICATION=true
+    ports:
+      - "16000:16000"   # HBase Master port
+      - "16010:16010"   # HBase Master Web UI
+      - "8080:8080"     # REST API (Stargate) — used by Node.js
+      - "8085:8085"     # REST UI
+      - "9090:9090"     # Thrift
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - hbase-net
+    volumes:
+      - hbase-master-data:/hbase-data
+      - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+    command: >
+      bash -c "
+        /opt/hbase/bin/start-hbase.sh &&
+        /opt/hbase/bin/hbase rest start -p 8080 &
+        tail -f /opt/hbase/logs/*.log
+      "
+
+  # ── RegionServer 1 (Shard 1) ────────────────────────────────
+  regionserver-1:
+    image: harisekhon/hbase:latest
+    container_name: regionserver-1
+    hostname: regionserver-1
+    environment:
+      - HBASE_MANAGES_ZK=false
+      - HBASE_ZOOKEEPER_QUORUM=zookeeper
+      - HBASE_ZOOKEEPER_PROPERTY_CLIENT_PORT=2181
+      - HBASE_REPLICATION=true
+    ports:
+      - "16020:16020"
+      - "16030:16030"
+    depends_on:
+      - hbase-master
+    networks:
+      - hbase-net
+    volumes:
+      - hbase-rs1-data:/hbase-data
+      - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+    command: /opt/hbase/bin/hbase regionserver start
+
+  # ── RegionServer 2 (Shard 2) ────────────────────────────────
+  regionserver-2:
+    image: harisekhon/hbase:latest
+    container_name: regionserver-2
+    hostname: regionserver-2
+    environment:
+      - HBASE_MANAGES_ZK=false
+      - HBASE_ZOOKEEPER_QUORUM=zookeeper
+      - HBASE_ZOOKEEPER_PROPERTY_CLIENT_PORT=2181
+      - HBASE_REPLICATION=true
+    ports:
+      - "16021:16020"
+      - "16031:16030"
+    depends_on:
+      - hbase-master
+    networks:
+      - hbase-net
+    volumes:
+      - hbase-rs2-data:/hbase-data
+      - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+    command: /opt/hbase/bin/hbase regionserver start
+
+  # ── RegionServer 3 (Shard 3) ────────────────────────────────
+  regionserver-3:
+    image: harisekhon/hbase:latest
+    container_name: regionserver-3
+    hostname: regionserver-3
+    environment:
+      - HBASE_MANAGES_ZK=false
+      - HBASE_ZOOKEEPER_QUORUM=zookeeper
+      - HBASE_ZOOKEEPER_PROPERTY_CLIENT_PORT=2181
+      - HBASE_REPLICATION=true
+    ports:
+      - "16022:16020"
+      - "16032:16030"
+    depends_on:
+      - hbase-master
+    networks:
+      - hbase-net
+    volumes:
+      - hbase-rs3-data:/hbase-data
+      - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
+    command: /opt/hbase/bin/hbase regionserver start
+
+  # ── Node.js API ─────────────────────────────────────────────
+  api:
+    build: .
+    container_name: activity-tracker-api
+    ports:
+      - "3000:3000"
+    environment:
+      - HBASE_HOST=hbase-master
+      - HBASE_PORT=8080
+      - JWT_SECRET=change_me_in_production
+      - JWT_EXPIRES_IN=7d
+      - NODE_ENV=production
+    depends_on:
+      - hbase-master
+    networks:
+      - hbase-net
+    restart: unless-stopped
+
+networks:
+  hbase-net:
+    driver: bridge
+
+volumes:
+  hbase-master-data:
+  hbase-rs1-data:
+  hbase-rs2-data:
+  hbase-rs3-data:
