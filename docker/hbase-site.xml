@@ -1,6 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  HBase Configuration — Activity Tracker School Project
+  Key settings for Sharding & Replication demonstration
+-->
 <configuration>
+
+  <!-- ZooKeeper quorum address -->
   <property>
     <name>hbase.zookeeper.quorum</name>
     <value>zookeeper</value>
   </property>
+  <property>
+    <name>hbase.zookeeper.property.clientPort</name>
+    <value>2181</value>
+  </property>
+
+  <!-- Data directory inside container -->
+  <property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://hbase-master:9000/hbase</value>
+    <!-- For single-node demo, use: file:///hbase-data -->
+  </property>
+
+  <!-- ─── REPLICATION ────────────────────────────────────────
+    Enable HBase built-in replication.
+    Each table column family is set with REPLICATION_SCOPE => 1
+    in the setup script to activate replication for that family.
+  ──────────────────────────────────────────────────────────── -->
+  <property>
+    <name>hbase.replication</name>
+    <value>true</value>
+  </property>
+
+  <!-- ─── SHARDING (Region Splitting) ──────────────────────
+    Pre-split tables into regions on creation.
+    Each region is assigned to a RegionServer → sharding.
+    Configured via split keys in setupHBase.js script.
+  ──────────────────────────────────────────────────────────── -->
+
+  <!-- Auto-split region when it reaches 256 MB -->
+  <property>
+    <name>hbase.hregion.max.filesize</name>
+    <value>268435456</value>
+  </property>
+
+  <!-- RegionServer handler threads -->
+  <property>
+    <name>hbase.regionserver.handler.count</name>
+    <value>30</value>
+  </property>
+
+  <!-- REST API port (Stargate) -->
+  <property>
+    <name>hbase.rest.port</name>
+    <value>8080</value>
+  </property>
+
+  <!-- Master addresses -->
+  <property>
+    <name>hbase.master</name>
+    <value>hbase-master:16000</value>
+  </property>
+
 </configuration>
