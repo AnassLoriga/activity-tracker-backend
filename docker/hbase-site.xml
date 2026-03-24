@@ -1,12 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-<!--
-  HBase Configuration — Activity Tracker School Project
-  Key settings for Sharding & Replication demonstration
--->
 <configuration>
 
-  <!-- ZooKeeper quorum address -->
+  <!-- ZooKeeper -->
   <property>
     <name>hbase.zookeeper.quorum</name>
     <value>zookeeper</value>
@@ -16,51 +12,37 @@
     <value>2181</value>
   </property>
 
-  <!-- Data directory inside container -->
+  <!--
+    IMPORTANT: file:/// (local FS) — pas HDFS.
+    HDFS n'est pas dans ce setup Docker.
+  -->
   <property>
     <name>hbase.rootdir</name>
-    <value>hdfs://hbase-master:9000/hbase</value>
-    <!-- For single-node demo, use: file:///hbase-data -->
+    <value>file:///hbase-data</value>
   </property>
 
-  <!-- ─── REPLICATION ────────────────────────────────────────
-    Enable HBase built-in replication.
-    Each table column family is set with REPLICATION_SCOPE => 1
-    in the setup script to activate replication for that family.
-  ──────────────────────────────────────────────────────────── -->
+  <!-- Mode distribué pour avoir plusieurs RegionServers -->
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+
+  <!-- Réplication activée -->
   <property>
     <name>hbase.replication</name>
     <value>true</value>
   </property>
 
-  <!-- ─── SHARDING (Region Splitting) ──────────────────────
-    Pre-split tables into regions on creation.
-    Each region is assigned to a RegionServer → sharding.
-    Configured via split keys in setupHBase.js script.
-  ──────────────────────────────────────────────────────────── -->
-
-  <!-- Auto-split region when it reaches 256 MB -->
+  <!-- Auto-split region à 256 MB -->
   <property>
     <name>hbase.hregion.max.filesize</name>
     <value>268435456</value>
   </property>
 
-  <!-- RegionServer handler threads -->
+  <!-- Threads RegionServer -->
   <property>
     <name>hbase.regionserver.handler.count</name>
     <value>30</value>
-  </property>
-
-  <!-- REST API port (Stargate) -->
-  <property>
-    <name>hbase.rest.port</name>
-    <value>8080</value>
-  </property>
-
-  <!-- Master addresses -->
-  <property>
-    <name>hbase.master</name>
-    <value>hbase-master:16000</value>
   </property>
 
 </configuration>
