@@ -94,7 +94,7 @@ services:
     volumes:
       - hbase-rs1-data:/hbase-data
       - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
-    command: /opt/hbase/bin/hbase regionserver start
+    command: regionserver
 
   # ── RegionServer 2 (Shard 2) ────────────────────────────────
   regionserver-2:
@@ -116,7 +116,7 @@ services:
     volumes:
       - hbase-rs2-data:/hbase-data
       - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
-    command: /opt/hbase/bin/hbase regionserver start
+    command: regionserver
 
   # ── RegionServer 3 (Shard 3) ────────────────────────────────
   regionserver-3:
@@ -138,7 +138,7 @@ services:
     volumes:
       - hbase-rs3-data:/hbase-data
       - ./docker/hbase-site.xml:/opt/hbase/conf/hbase-site.xml
-    command: /opt/hbase/bin/hbase regionserver start
+    command: regionserver
 
   # ── Node.js API ─────────────────────────────────────────────
   api:

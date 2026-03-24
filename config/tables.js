@@ -37,7 +37,7 @@ const TABLES = {
     },
     // Pre-split keys for sharding (users distributed across 3 regions)
     // UUID prefixes ensure even distribution
-    splitKeys: ["4", "8", "c"],
+    //splitKeys: ["4", "8", "c"],
     schema: {
       ColumnSchema: [
         { name: "info",  REPLICATION_SCOPE: "1", BLOOMFILTER: "ROW" },
@@ -57,7 +57,7 @@ const TABLES = {
       DEVICE: "dev",      // battery, network_type, device_model
     },
     // Split by first char of userId → distributes across regions
-    splitKeys: ["3", "6", "9", "c", "f"],
+    //splitKeys: ["3", "6", "9", "c", "f"],
     schema: {
       ColumnSchema: [
         {
@@ -88,7 +88,7 @@ const TABLES = {
     families: {
       STATS: "stats", // total_duration, session_count, first_open, last_open
     },
-    splitKeys: ["4", "8", "c"],
+    //splitKeys: ["4", "8", "c"],
     schema: {
       ColumnSchema: [
         {
@@ -109,7 +109,7 @@ const TABLES = {
       SUMMARY: "summary", // total_screen_time, total_steps, top_app, unlocks
       APPS: "apps",       // per-app breakdown stored as columns
     },
-    splitKeys: ["4", "8", "c"],
+    //splitKeys: ["4", "8", "c"],
     schema: {
       ColumnSchema: [
         {
